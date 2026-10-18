@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PIC Chat</title>
+<style>
+:root{--bg:#faf7f0;--side:#f1ece1;--text:#2b2723;--muted:#7a7268;--accent:#6b2d2d;--on:#fff;--bub:#ece6d9;--line:#ddd5c4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1b18;--side:#161513;--text:#ebe6dc;--muted:#a39b8d;--accent:#d29a8a;--on:#1d1b18;--bub:#2a2724;--line:#3a3631;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1d1b18;--side:#161513;--text:#ebe6dc;--muted:#a39b8d;--accent:#d29a8a;--on:#1d1b18;--bub:#2a2724;--line:#3a3631;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:17px/1.65 Georgia,"Iowan Old Style","Times New Roman",serif;display:flex;flex-direction:column;overflow:hidden}
+button,select,textarea{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+button{background:none;border:0;color:inherit;font-size:15px;cursor:pointer}
+.top{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+.ttl{font-size:20px;letter-spacing:.3px}.ttl small{font:12px system-ui,sans-serif;color:var(--accent);margin-left:6px;text-transform:uppercase;letter-spacing:1px}
+.ib,.ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none}
+#acc{font:600 16px system-ui,sans-serif}
+#chat{flex:1;overflow-y:auto;padding:18px 16px}
+.m,.welcome{max-width:720px;margin:0 auto 22px}
+.m.user{display:flex;justify-content:flex-end}
+.m.user .tx{background:var(--bub);padding:10px 16px;border-radius:18px;max-width:85%;white-space:pre-wrap}
+.m.assistant .tx{white-space:pre-wrap}
+.m img{width:100%;max-width:420px;border-radius:10px;background:#fff;display:block;margin-top:10px}
+.act{display:flex;gap:2px;margin-top:6px}.act button{font-size:13px;color:var(--muted);padding:4px 8px;border-radius:6px}
+.welcome{text-align:center;padding-top:14vh}.welcome h2{font-weight:400;font-size:28px;margin:0 0 20px}
+.sug{display:flex;flex-direction:column;gap:8px;max-width:360px;margin:0 auto}
+.sug button{border:1px solid var(--line);border-radius:10px;padding:11px 14px;color:var(--muted)}
+footer{width:100%;max-width:780px;margin:0 auto;padding:6px 12px 10px}
+#modeBar{min-height:0}.mchip{background:var(--accent);color:var(--on);border-radius:999px;padding:4px 12px;font-size:13px;margin:0 0 8px}
+.box{display:flex;align-items:flex-end;gap:2px;background:var(--bub);border:1px solid var(--line);border-radius:24px;padding:4px 6px}
+textarea{flex:1;min-width:0;resize:none;border:0;background:transparent;color:var(--text);font-size:16px;padding:9px 6px;max-height:140px;outline:none}
+#send{background:var(--accent);color:var(--on)}#send:disabled{opacity:.4}
+#mic.on,#rd.on{color:#c0392b}
+select{background:var(--bub);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px}
+.t{border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px}
+#drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,85%);background:var(--side);z-index:5;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 12px;overflow-y:auto;border-right:1px solid var(--line)}
+#shade{position:fixed;inset:0;background:#0006;z-index:4}
+.nb{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:8px}.nb:hover{background:var(--bub)}
+.lbl{font:12px system-ui,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:16px 12px 6px}
+.ci{display:flex;align-items:center;border-radius:8px}.ci:hover,.ci.on{background:var(--bub)}
+.ci span{flex:1;padding:8px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-size:15px}
+.ci button{color:var(--muted);padding:6px 10px}
+.panel{position:fixed;right:10px;top:calc(52px + env(safe-area-inset-top,0px));width:min(280px,calc(100% - 20px));background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;z-index:6;font:14px system-ui,sans-serif;box-shadow:0 8px 24px #0002}
+.panel p{margin:0 0 6px}
+#sheet{position:fixed;inset:0;background:#0006;z-index:7;display:flex;align-items:flex-end}
+.sh{width:100%;max-width:560px;margin:0 auto;background:var(--bg);border-radius:18px 18px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));border:1px solid var(--line)}
+.opt{display:flex;justify-content:space-between;width:100%;padding:13px 4px;border-bottom:1px solid var(--line);text-align:left}
+.opt i{font-style:normal;color:var(--muted);font-size:13px}
+#plans,#set,#dev,#auth,#srch,#lib,#np,#book,#pnt{position:fixed;inset:0;background:var(--bg);z-index:8;overflow-y:auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.pw{max-width:560px;margin:0 auto}.row{display:flex;justify-content:space-between;align-items:center}.pw h2{font-weight:400;margin:6px 0}
+.fld{width:100%;padding:11px 12px;margin:6px 0;border:1px solid var(--line);border-radius:8px;background:var(--bub);color:var(--text);font-size:16px}
+.muted{color:var(--muted);font:14px system-ui,sans-serif}
+.sr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}.card.cur{border:2px solid var(--accent)}.card h3{margin:0;font-weight:400}.card ul{padding-left:18px;margin:8px 0;font-size:15px}
+.card .pick{width:100%;background:var(--accent);color:var(--on);border-radius:8px;padding:10px}.card.cur .pick{background:var(--bub);color:var(--text)}
+.top .ttl{flex:1;margin-left:4px}
+.up{background:var(--bub);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--accent);font-weight:600;margin-right:2px}
+.pill{position:sticky;bottom:8px;display:block;margin:16px 0 0;background:var(--accent);color:var(--on);border-radius:999px;padding:12px 24px;font-weight:600}
+#pop{position:fixed;inset:0;z-index:7}
+.pm{position:absolute;left:12px;bottom:calc(78px + env(safe-area-inset-bottom,0px));background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 8px 24px #0003;min-width:210px}
+.pm button{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:10px;font-size:16px}.pm button:hover{background:var(--bub)}
+#lg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}#lg img{width:100%;border-radius:10px;background:#fff;cursor:pointer}
+.off{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+.clk{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.ckt{font-size:24px;letter-spacing:.5px}.ckd{font:13px system-ui,sans-serif;color:var(--muted)}
+#dpop{position:fixed;inset:0;z-index:7}
+.pm2{position:absolute;left:16px;top:calc(64px + env(safe-area-inset-top,0px));background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 8px 24px #0003;min-width:200px}
+.pm2 button{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:10px;font-size:16px}.pm2 button:hover{background:var(--bub)}
+.t.on{background:var(--accent);color:var(--on);border-color:var(--accent)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;background:var(--text);color:var(--bg);padding:8px 14px;border-radius:8px;font:14px system-ui,sans-serif;z-index:9;max-width:90%}
+</style></head><body>
+<div class="top"><button class="ib" id="menu" aria-label="Chats"></button><div class="ttl">PIC Chat<small id="pb"></small></div><button class="up" id="upg">Upgrade</button><button class="ib" id="tmp" aria-label="Temporary chat"></button><button class="ib" id="acc" aria-label="Account"></button></div>
+<div class="panel" id="panel" hidden><p><b id="pt">Checking account…</b></p><p id="pd" class="muted"></p><div id="pa" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div></div>
+<div id="shade" hidden></div>
+<aside id="drawer" hidden><div class="clk"><div><div id="ck" class="ckt"></div><div id="cd" class="ckd"></div></div><button class="ib" id="dots" aria-label="More"></button></div>
+<button class="nb" id="srchBtn">Search chats</button><button class="nb" id="imgNav">Create image</button><button class="nb" id="libBtn">Library</button><button class="nb" id="plansBtn">Plans</button><button class="nb" id="sBtn">Settings</button><button class="nb" id="devBtn" hidden>Developer area</button>
+<div class="lbl">Recent</div><div id="list"></div><button class="pill" id="new">New chat</button></aside>
+<div id="chat"></div>
+<footer><div id="modeBar"></div>
+<div class="box"><button class="ic" id="plus" aria-label="Tools"></button><textarea id="q" rows="1" placeholder="Message PIC Chat"></textarea><button class="ic" id="mic" aria-label="Voice input"></button><button class="ic" id="rd" aria-label="Read chat aloud"></button><button class="ic" id="send" aria-label="Send"></button></div></footer>
+
+<div id="sheet" hidden><div class="sh">
+<div class="row"><b style="font-weight:400;font-size:18px">Tools</b><button class="ib" id="shx" aria-label="Close"></button></div>
+<button class="opt" id="attT"><span>Add photo, video or file</span><i id="attS"></i></button>
+
+<div class="sr"><span>Answer style</span><select id="style"></select></div>
+<button class="opt" id="imgT"><span>Create image</span><i id="imgS"></i></button>
+<button class="opt" id="arT"><span>Read replies aloud</span><i id="arS"></i></button>
+<button class="opt" id="gameT"><span>Mini game</span><i id="gameS"></i></button>
+<button class="opt" id="vidT"><span>Video</span><i id="vidS"></i></button>
+</div></div>
+
+<div id="plans" hidden><div class="pw"><div class="row"><h2>Choose your plan</h2><button class="ib" id="pc" aria-label="Close"></button></div><p class="muted">Demo plans: no payment is taken.</p><div id="pg"></div></div></div>
+<div id="set" hidden><div class="pw"><div class="row"><h2>Settings</h2><button class="ib" id="sc" aria-label="Close"></button></div>
+<div class="sr"><span>Theme</span><select id="sTheme"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+<div class="sr"><span>Text size</span><select id="sSize"><option value="14">Small</option><option value="17">Medium</option><option value="20">Large</option></select></div>
+<div class="sr"><span>Default answer style</span><select id="sStyle"></select></div>
+<div class="sr"><span>Voice speed</span><select id="sRate"><option value="0.8">Slow</option><option value="1">Normal</option><option value="1.25">Fast</option></select></div>
+<div class="sr"><span>Mic language</span><select id="sLang"><option value="">Auto</option><option value="en-US">English</option><option value="hi-IN">हिन्दी</option><option value="ta-IN">தமிழ்</option><option value="es-ES">Español</option><option value="fr-FR">Français</option><option value="ar-SA">العربية</option></select></div>
+<div class="sr"><span>Plan: <b id="sPlan" style="font-weight:600"></b></span><button class="t" id="sPlanB">Change</button></div>
+<div class="sr"><button class="t" id="sClear">Clear all chats</button></div>
+<p class="muted">Settings are saved on this device.</p></div></div>
+<div id="dev" hidden><div class="pw"><div class="row"><h2>Developer area</h2><button class="ib" id="dc" aria-label="Close"></button></div>
+<p class="muted">Owner only. Welcome, Aditya Gupta.</p>
+<div class="card" id="dstats"></div>
+<div class="sr"><span>Model tier</span><select id="dTier"><option value="">By plan</option><option value="quick">Quick</option><option value="default">Default</option><option value="complex">Complex</option></select></div>
+<p class="muted" style="margin:14px 0 6px">Custom instructions for the AI</p>
+<textarea id="dSys" rows="4" style="width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bub);color:var(--text);padding:10px;font-size:15px" placeholder="For example: Always answer in Hindi"></textarea>
+<div class="sr"><button class="t" id="dSave">Save instructions</button><button class="t" id="dReset">Reset usage</button></div>
+<div class="sr"><button class="t" id="dExport">Export chats</button></div>
+<p class="muted" id="dlog"></p></div></div>
+<div id="auth" hidden><div class="pw"><div class="row"><h2 id="aT">Sign up</h2><button class="ib" id="ac" aria-label="Close"></button></div>
+<p class="muted" id="aD"></p>
+<div class="card">
+<input class="fld" id="aN" placeholder="Your name" autocomplete="name">
+<input class="fld" id="aE" type="email" placeholder="Email" autocomplete="email">
+<p class="muted" id="aErr" style="color:#c0392b;min-height:18px;margin:6px 0"></p>
+<button class="pick" id="aGo"></button>
+<button class="t" id="aSw" style="width:100%;margin-top:10px;border:0;color:var(--accent)"></button></div>
+<a class="t" href="https://claude.ai/login" target="_blank" rel="noopener" style="display:block;text-align:center;margin:10px 0;text-decoration:none;color:var(--text)">Continue with Claude account</a>
+<button class="t" id="aGu" style="width:100%">Continue as guest</button>
+<p class="muted" style="margin-top:14px">This creates a profile on this device only. It has no password. To keep your chats on every device, sign in with a Claude account.</p>
+</div></div>
+<div id="srch" hidden><div class="pw"><div class="row"><input class="fld" id="sq" placeholder="Search chats" style="flex:1"><button class="ib" id="sx" aria-label="Close"></button></div><div id="sl" style="margin-top:10px"></div></div></div>
+<div id="lib" hidden><div class="pw"><div class="row"><h2>Library</h2><button class="ib" id="lx" aria-label="Close"></button></div><div id="lg"></div></div></div>
+<div id="pop" hidden><div class="pm"><button id="pCam">Camera</button><button id="pPh">Photos</button><button id="pFi">Files</button><button id="pTh">Think harder</button><button id="pMore">More tools</button></div>
+</div>
+<input class="off" type="file" id="fiCam" accept="image/*" capture="environment"><input class="off" type="file" id="fiPh" accept="image/*,video/*"><input class="off" type="file" id="fi" accept="image/*,video/*,.txt,.md,.csv,.json,.html,.css,.js,.py,.xml,.log,.ts,.java,.c,.cpp,.sql">
+<div id="dpop" hidden><div class="pm2"><button id="mNote">Notepad</button><button id="mBook">Notebook</button><button id="mPaint">Paint</button></div></div>
+<div id="np" hidden><div class="pw"><div class="row"><h2>Notepad</h2><button class="ib" id="npx" aria-label="Close"></button></div>
+<textarea id="npt" class="fld" rows="14" placeholder="Write your notes here…" style="resize:vertical"></textarea>
+<div class="row" style="margin-top:10px"><button class="t" id="npc">Copy</button><button class="t" id="npd">Download</button><button class="t" id="npk">Clear</button></div>
+<p class="muted" id="nps"></p></div></div>
+<div id="book" hidden><div class="pw"><div class="row"><h2 id="bT">Notebook</h2><button class="ib" id="bx" aria-label="Close"></button></div>
+<div id="bl"></div>
+<div id="be" hidden><input class="fld" id="bti" placeholder="Title"><textarea class="fld" id="bbo" rows="12" placeholder="Write…"></textarea>
+<div class="row" style="margin-top:10px"><button class="t" id="bbk">Back</button><button class="t" id="bdl">Delete</button></div></div>
+<button class="pill" id="bnew" style="position:static;width:100%">New note</button></div></div>
+<div id="pnt" hidden><div class="pw"><div class="row"><h2>Paint</h2><button class="ib" id="px" aria-label="Close"></button></div>
+<canvas id="cv" style="width:100%;height:52vh;background:#fff;border:1px solid var(--line);border-radius:10px;touch-action:none"></canvas>
+<div id="pc2" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"></div>
+<input type="range" id="psz" min="2" max="40" value="6" style="width:100%" aria-label="Brush size">
+<div class="row" style="margin-top:10px;gap:6px"><button class="t" id="pEr">Eraser</button><button class="t" id="pUn">Undo</button><button class="t" id="pCl">Clear</button><button class="t" id="pSv">Save</button></div></div></div>
+<div id="toast" hidden></div>
+<script>
+const $=id=>document.getElementById(id);
+const svg=p=>'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';
+const X=svg('<path d="M6 6l12 12M18 6L6 18"/>');
+$("menu").innerHTML=svg('<path d="M4 7h16M4 12h16M4 17h10"/>');
+$("acc").innerHTML=svg('<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-4 4-5.5 7-5.5s6.2 1.5 7 5.5"/>');
+$("plus").innerHTML=svg('<path d="M12 5v14M5 12h14"/>');
+$("mic").innerHTML=svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>');
+$("send").innerHTML=svg('<path d="M12 19V5M6 11l6-6 6 6"/>');
+["shx","pc","sc"].forEach(i=>$(i).innerHTML=X);
+const modes={Quick:"in under 80 words",Detailed:"in about 250 words, thoroughly","Explain simply":"in under 120 words, as if to a curious 10-year-old","Pros & cons":"as a balanced pros and cons list","Step by step":"as clear numbered steps"};
+["style","sStyle"].forEach(i=>Object.keys(modes).forEach(k=>{const o=document.createElement("option");o.textContent=k;$(i).appendChild(o)}));
+const PLANS={free:{name:"Free",price:"$0",msgs:10,img:0,styles:["Quick"],feat:["10 messages per day","Quick answers","Fast model"]},
+medium:{name:"Medium",price:"$5",msgs:50,img:5,styles:null,feat:["50 messages per day","5 images per day","All answer styles","Notepad, Notebook and Paint"]},
+pro:{name:"Pro",price:"$15",msgs:200,img:30,styles:null,feat:["200 messages per day","30 images per day","All answer styles","Smartest model","Notepad, Notebook and Paint"]},
+og:{name:"OG",price:"$30",msgs:Infinity,img:Infinity,styles:null,feat:["Unlimited messages","Unlimited images","Smartest model","Mini game creator","Video creator","Notepad, Notebook and Paint"]}};
+const TIER={free:"quick",medium:"default",pro:"complex",og:"complex"};
+let plan=(()=>{try{const p=localStorage.getItem("adi_plan");return PLANS[p]?p:"free"}catch(e){return"free"}})();
+const P=()=>PLANS[plan];
+let S={theme:"auto",size:"17",style:"Quick",rate:"1",lang:""};
+try{Object.assign(S,JSON.parse(localStorage.getItem("adi_set")||"{}"))}catch(e){}
+let chats=[],cur=null,busy=false,mode="",sample=null,cloud=null,autoRead=false,speakNext=false,heard=false,rec=null,on=false,owner=false,tierOv="",sys="",lastErr="",att=null,think=false,temp=false;
+try{const d=JSON.parse(localStorage.getItem("adi_dev")||"{}");tierOv=d.tier||"";sys=d.sys||""}catch(e){}
+let prof=null,sess=false,cuName="";
+try{prof=JSON.parse(localStorage.getItem("adi_prof")||"null");sess=localStorage.getItem("adi_sess")==="1"}catch(e){}
+try{chats=JSON.parse(localStorage.getItem("adi_chats")||"[]")}catch(e){}
+const q=$("q");
+function toast(t){const e=$("toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,3500)}
+function saveS(){try{localStorage.setItem("adi_set",JSON.stringify(S))}catch(e){}}
+function applyS(){const r=document.documentElement;S.theme==="auto"?r.removeAttribute("data-theme"):r.setAttribute("data-theme",S.theme);document.body.style.fontSize=S.size+"px"}
+function speak(t){speechSynthesis.resume();const u=new SpeechSynthesisUtterance(t);u.rate=parseFloat(S.rate)||1;u.lang=S.lang||navigator.language||"en-US";speechSynthesis.speak(u)}
+function persist(){if(cur)cur.u=Date.now();const s=chats.filter(c=>!c.temp).slice(0,20).map(c=>({id:c.id,title:c.title,u:c.u,msgs:c.msgs.slice(-20).map(m=>({r:m.r,t:(m.t||"").slice(0,2000)}))}));
+ try{localStorage.setItem("adi_chats",JSON.stringify(s))}catch(e){}if(cloud)cloud.set({items:s,plan}).catch(()=>{})}
+function badge(){$("pb").textContent=owner&&plan==="og"?"Owner":plan==="free"?"":P().name;$("upg").hidden=plan!=="free"}
+function ui(){
+ const L={image:"Create image",game:"Mini game",video:"Video"};
+ $("imgS").textContent=mode==="image"?"On":P().img?"Off":"Medium plan";
+ $("gameS").textContent=mode==="game"?"On":plan==="og"?"Off":"OG plan";
+ $("vidS").textContent=mode==="video"?"On":plan==="og"?"Off":"OG plan";
+ $("arS").textContent=autoRead?"On":"Off";
+ const b=$("modeBar");b.innerHTML="";
+ if(mode){const c=document.createElement("button");c.className="mchip";c.textContent=L[mode]+"  ×";c.onclick=()=>setMode(mode);b.appendChild(c)}
+ $("attS").textContent=att?"Attached":"";
+ if(att){const c=document.createElement("button");c.className="mchip";c.textContent=att.name.slice(0,24)+"  ×";c.onclick=()=>{att=null;ui()};b.appendChild(c)}
+ if(think){const c=document.createElement("button");c.className="mchip";c.textContent="Think harder  ×";c.onclick=()=>{think=false;ui()};b.appendChild(c)}
+ q.placeholder=mode==="image"?"Describe an image to create":mode==="game"?"Describe the game to create":mode==="video"?"Describe the video to create":"Message PIC Chat"}
+function setMode(m){
+ if(mode===m)m="";
+ if(m==="image"&&!P().img){toast("Images need the Medium plan or higher.");showPlans(true);return}
+ if((m==="game"||m==="video")&&plan!=="og"){toast("Mini game and Video are for the OG plan.");showPlans(true);return}
+ mode=m;ui();sheet(false)}
+function setPlan(id){plan=id;try{localStorage.setItem("adi_plan",id)}catch(e){}
+ if(P().styles&&!P().styles.includes($("style").value)){$("style").value="Quick";S.style="Quick";saveS()}
+ if((mode==="image"&&!P().img)||((mode==="game"||mode==="video")&&plan!=="og"))mode="";
+ badge();ui();persist()}
+function useOk(){const d=new Date().toDateString();let u={};try{u=JSON.parse(localStorage.getItem("adi_use")||"{}")}catch(e){}if(u.d!==d)u={d,m:0,i:0};
+ const p=P(),k=mode==="image"?"i":"m",lim=k==="i"?p.img:p.msgs;
+ if(u[k]>=lim){toast("Daily "+(k==="i"?"image":"message")+" limit reached on "+p.name+". Upgrade in Plans.");showPlans(true);return false}
+ u[k]++;try{localStorage.setItem("adi_use",JSON.stringify(u))}catch(e){}return true}
+function sheet(o){$("sheet").hidden=!o}
+function drawer(o){$("drawer").hidden=!o;$("shade").hidden=!o}
+function showPlans(o){$("plans").hidden=!o;if(!o)return;const g=$("pg");g.innerHTML="";drawer(false);sheet(false);
+ Object.entries(PLANS).forEach(([id,p])=>{const c=document.createElement("div");c.className="card"+(id===plan?" cur":"");
+  const h=document.createElement("h3");h.textContent=p.name+"  ·  "+p.price+(id==="free"?"":"/mo");c.appendChild(h);
+  const ul=document.createElement("ul");p.feat.forEach(f=>{const li=document.createElement("li");li.textContent=f;ul.appendChild(li)});c.appendChild(ul);
+  const b=document.createElement("button");b.className="pick";b.textContent=id===plan?"Current plan":"Choose "+p.name;b.onclick=()=>{setPlan(id);showPlans(false);toast("Switched to "+p.name)};c.appendChild(b);g.appendChild(c)})}
+function showSet(o){$("set").hidden=!o;if(!o)return;drawer(false);[["sTheme","theme"],["sSize","size"],["sStyle","style"],["sRate","rate"],["sLang","lang"]].forEach(([i,k])=>{$(i).value=S[k]});$("sPlan").textContent=P().name}
+function bubble(m,live){
+ const d=document.createElement("div");d.className="m "+m.r;const w=document.createElement("div");
+ const tx=document.createElement("div");tx.className="tx";tx.textContent=m.t||"…";w.appendChild(tx);
+ if(m.svg){const i=document.createElement("img");i.src=m.url;i.alt="Generated image";w.appendChild(i)}
+ if(m.html){const f=document.createElement("iframe");f.setAttribute("sandbox","allow-scripts");f.srcdoc=m.html;f.style.cssText="width:100%;max-width:420px;height:440px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-top:10px;display:block";w.appendChild(f)}
+ if(m.r==="assistant"&&!live&&m.t){const a=document.createElement("div");a.className="act";
+  const add=(l,f)=>{const b=document.createElement("button");b.textContent=l;b.onclick=f;a.appendChild(b)};
+  add("Copy",()=>{navigator.clipboard?.writeText(m.t).then(()=>toast("Copied"),()=>toast("Copy not allowed here"))});
+  if(window.speechSynthesis)add("Listen",()=>{speechSynthesis.cancel();speak(m.t)});
+  const save=(name,data)=>async()=>{const dl=await claude.use("downloads");dl?dl.save({filename:name,data}).catch(()=>{}):toast("Download unavailable")};
+  if(m.html)add("Download",save("creation.html",m.html));
+  if(m.svg)add("Download",save("image.svg",m.svg));
+  w.appendChild(a)}
+ d.appendChild(w);return d}
+function render(){
+ const c=$("chat");c.innerHTML="";
+ if(!cur||!cur.msgs.length){const w=document.createElement("div");w.className="welcome";w.innerHTML=temp?"<h2>Temporary chat</h2><p class='muted'>This chat won't appear in history.</p>":"<h2>How can I help you today?</h2>";
+  const s=document.createElement("div");s.className="sug";
+  [["Create an image",()=>setMode("image")],["Write or edit",()=>{q.value="Help me write: ";q.focus()}],["Explain something simply",()=>{q.value="Explain simply: ";q.focus()}],["Plan a trip",()=>{q.value="Plan a three-day trip to ";q.focus()}]].forEach(([t,f])=>{const b=document.createElement("button");b.textContent=t;b.onclick=f;s.appendChild(b)});
+  w.appendChild(s);c.appendChild(w)}
+ else cur.msgs.forEach((m,i)=>c.appendChild(bubble(m,busy&&i===cur.msgs.length-1)));
+ c.scrollTop=c.scrollHeight}
+function list(){const l=$("list");l.innerHTML="";chats.filter(c=>!c.temp).forEach(ch=>{const r=document.createElement("div");r.className="ci"+(ch===cur?" on":"");
+ const s=document.createElement("span");s.textContent=ch.title||"New chat";s.onclick=()=>{cur=ch;render();list();drawer(false)};
+ 
+ r.append(s);l.appendChild(r)})}
+function grow(){q.style.height="auto";q.style.height=Math.min(q.scrollHeight,140)+"px"}
+async function send(){
+ const sp=speakNext;speakNext=false;window.speechSynthesis&&speechSynthesis.cancel();
+ let t=q.value.trim();if(!t&&att)t=att.kind==="text"?"Summarize this file.":"Describe this.";if(!t||busy)return;
+ if(!sample)return toast("AI isn't available in this view.");
+ if(!useOk())return;
+ q.value="";grow();const A=att;att=null;ui();
+ if(!cur){cur={id:Date.now().toString(36),title:t.slice(0,40),msgs:[],u:Date.now(),temp};chats.unshift(cur)}
+ const a={r:"assistant",t:""};cur.msgs.push({r:"user",t:t+(A?"  ["+A.name+"]":""),ctx:A&&A.text?"\n\n[Attached file: "+A.name+"]\n"+A.text:""},a);busy=true;$("send").disabled=true;render();list();
+ const live=()=>$("chat").lastChild?.querySelector(".tx");
+ try{
+  if(mode==="game"||mode==="video"){
+   const kind=mode==="game"?"a complete, fun, playable mini game (works with touch and keyboard, shows a score, has a restart button)":"a short animated video (about 20 seconds, 3 to 5 scenes with titles, smooth CSS or canvas animation, auto-plays, with a replay button) as a self-contained animated page";
+   const r=await sample("Create "+kind+" about: "+t+"\nOutput ONLY one complete HTML document (<!DOCTYPE html> to </html>) with inline CSS and JS, no external files, no network requests, under 200 lines, tasteful colors, fits a 380px wide phone screen.",{cache:false,modelTier:"complex"});
+   const m=r.text.match(/<!DOCTYPE html[\s\S]*<\/html>/i)||r.text.match(/<html[\s\S]*<\/html>/i);if(!m)throw new Error("none");
+   a.html=m[0];a.t=mode==="game"?"Your game is ready. Play it below.":"Your video is ready. It plays below. Screen-record it to save it as a video.";
+  }else if(mode==="image"){
+   const r=await sample("Create an SVG illustration of: "+t+"\nOutput ONLY one complete <svg> element with xmlns and viewBox=\"0 0 512 512\". No scripts, no external links or images, no text unless asked. Use shapes, gradients and a pleasing palette.",{cache:false,modelTier:tierOv||TIER[plan]});
+   const m=r.text.match(/<svg[\s\S]*<\/svg>/i);if(!m)throw new Error("none");
+   a.svg=m[0].replace(/<script[\s\S]*?<\/script>/gi,"");libAdd(a.svg);a.url=URL.createObjectURL(new Blob([a.svg],{type:"image/svg+xml"}));a.t="Here is your image.";
+  }else{
+   const h=cur.msgs.slice(0,-1).map(m=>({role:m.r,content:(m.t||"[image]")+(m.ctx||"")}));
+   if(A&&A.note)h[h.length-1].content+="\n\n"+A.note;
+   h[0].content="You are PIC Chat, a friendly, accurate assistant. PIC Chat is an app created and owned by Aditya Gupta. If asked who owns, made or created PIC Chat, say Aditya Gupta. If asked which AI model powers you, say you are PIC Chat and you can't share details about the underlying model. Never claim to be a different AI. Reply "+modes[$("style").value]+", in plain text without markdown. If something may depend on recent events, say so."+(sys?" Extra instructions: "+sys:"")+"\n\n"+h[0].content;
+   const r=await sample(h,{cache:false,...(A&&A.blobs?{images:A.blobs}:{}),modelTier:think?"complex":tierOv||TIER[plan],onText:({text})=>{a.t=text;const e=live();if(e){e.textContent=text;$("chat").scrollTop=$("chat").scrollHeight}}});
+   a.t=r.text;
+  }
+ }catch(e){lastErr=(e&&(e.code||e.message))||"unknown";cur.msgs.pop();cur.msgs.push({r:"assistant",t:e&&e.code==="rate_limited"?"Too many requests. Try again shortly.":"Sorry, that failed. Please try again."})}
+ busy=false;$("send").disabled=false;render();persist();
+ const last=cur.msgs[cur.msgs.length-1];
+ if((sp||autoRead)&&last&&last.r==="assistant"&&last.t&&!last.svg&&!last.html&&window.speechSynthesis)speak(last.t);
+}
+q.addEventListener("input",grow);
+q.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&matchMedia("(pointer:fine)").matches){e.preventDefault();send()}});
+$("send").onclick=send;
+$("menu").onclick=()=>drawer(true);$("shade").onclick=()=>drawer(false);
+$("new").onclick=()=>{chats=chats.filter(c=>!c.temp);cur=null;render();list();drawer(false)};
+$("acc").onclick=()=>{$("panel").hidden=!$("panel").hidden};
+$("plus").onclick=()=>pop(true);
+function pop(o){$("pop").hidden=!o}
+$("pop").onclick=e=>{if(e.target===$("pop"))pop(false)};
+$("pCam").onclick=()=>{$("fiCam").click();pop(false)};
+$("pPh").onclick=()=>{$("fiPh").click();pop(false)};
+$("pFi").onclick=()=>{$("fi").click();pop(false)};
+$("pMore").onclick=()=>{pop(false);sheet(true)};
+$("pTh").onclick=()=>{pop(false);if(plan==="free"){toast("Think harder needs the Medium plan or higher.");showPlans(true);return}think=!think;ui();toast(think?"Think harder is on":"Think harder is off")};
+$("tmp").innerHTML=svg('<circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/>');
+$("tmp").onclick=()=>{temp=!temp;chats=chats.filter(c=>!c.temp);cur=null;$("tmp").style.color=temp?"var(--accent)":"";render();list();toast(temp?"Temporary chat. It won't be saved.":"Temporary chat off")};
+$("upg").onclick=()=>showPlans(true);
+function showSrch(o){$("srch").hidden=!o;if(!o)return;drawer(false);$("sq").value="";srchList()}
+function srchList(){const v=$("sq").value.trim().toLowerCase(),l=$("sl");l.innerHTML="";
+ const r=chats.filter(c=>!c.temp&&(!v||(c.title||"").toLowerCase().includes(v)||c.msgs.some(m=>(m.t||"").toLowerCase().includes(v))));
+ if(!r.length){l.innerHTML='<p class="muted">No chats found.</p>';return}
+ r.forEach(ch=>{const b=document.createElement("button");b.className="nb";b.textContent=ch.title||"New chat";b.onclick=()=>{cur=ch;showSrch(false);render();list()};l.appendChild(b)})}
+$("srchBtn").onclick=()=>showSrch(true);$("sq").oninput=srchList;$("sx").innerHTML=X;$("sx").onclick=()=>showSrch(false);
+let lib=[];try{lib=JSON.parse(localStorage.getItem("adi_lib")||"[]")}catch(e){}
+function libAdd(s){lib.unshift(s);lib=lib.slice(0,20);try{localStorage.setItem("adi_lib",JSON.stringify(lib))}catch(e){}}
+function showLib(o){$("lib").hidden=!o;if(!o)return;drawer(false);const g=$("lg");g.innerHTML="";
+ if(!lib.length){g.innerHTML='<p class="muted">Images you create will appear here.</p>';return}
+ lib.forEach(s=>{const i=document.createElement("img");i.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s);i.alt="Created image";i.onclick=async()=>{const dl=await claude.use("downloads");dl?dl.save({filename:"image.svg",data:s}).catch(()=>{}):toast("Download unavailable")};g.appendChild(i)})}
+$("libBtn").onclick=()=>showLib(true);$("lx").innerHTML=X;$("lx").onclick=()=>showLib(false);
+$("imgNav").onclick=()=>{drawer(false);setMode("image")};
+$("dots").innerHTML=svg('<circle cx="12" cy="5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="19" r="1.3"/>');
+function clock(){const n=new Date();$("ck").textContent=n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"});$("cd").textContent=n.toLocaleDateString([],{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+clock();setInterval(clock,1000);
+$("rd").innerHTML=svg('<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>');
+let reading=false;
+function chunks(t){const o=[];let c="";(t.match(/[^.!?\n]+[.!?]*\s*/g)||[t]).forEach(s=>{if((c+s).length>180&&c){o.push(c);c=""}c+=s});if(c)o.push(c);return o}
+function stopRead(){reading=false;$("rd").classList.remove("on")}
+function readChat(){
+ if(!window.speechSynthesis)return toast("Reading aloud isn't supported here.");
+ if(reading){speechSynthesis.cancel();stopRead();return}
+ if(!cur||!cur.msgs.some(m=>m.t))return toast("Nothing to read yet.");
+ speechSynthesis.cancel();
+ const parts=[];cur.msgs.forEach(m=>{if(!m.t)return;const t=m.t.replace(/\s*\[[^\]]*\]\s*$/,"");chunks((m.r==="user"?"You said: ":"PIC Chat said: ")+t).forEach(c=>parts.push(c))});
+ reading=true;$("rd").classList.add("on");
+ setTimeout(()=>{const lang=S.lang||navigator.language||"en-US";const vc=speechSynthesis.getVoices().find(x=>x.lang&&x.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));speechSynthesis.resume();
+ parts.forEach((c,i)=>{const u=new SpeechSynthesisUtterance(c);u.rate=parseFloat(S.rate)||1;u.lang=lang;if(vc)u.voice=vc;u.onerror=e=>{if(e.error!=="interrupted"&&e.error!=="canceled"){stopRead();toast("Voice error: "+e.error)}};if(i===parts.length-1)u.onend=stopRead;speechSynthesis.speak(u)})},150);
+ setTimeout(()=>{if(reading&&!speechSynthesis.speaking&&!speechSynthesis.pending){stopRead();toast("Voice didn't start on this phone. Open the page in your browser and try again.")}},2500)}
+$("rd").onclick=readChat;
+if(!window.speechSynthesis)$("rd").hidden=true;else setInterval(()=>{if(reading&&!speechSynthesis.speaking&&!speechSynthesis.pending)stopRead()},1000);
+function dpop(o){$("dpop").hidden=!o}
+$("dots").onclick=()=>dpop(true);$("dpop").onclick=e=>{if(e.target===$("dpop"))dpop(false)};
+function paidOnly(n){if(plan==="free"){toast(n+" is for paid plans (Medium or higher).");showPlans(true);return false}return true}
+$("mNote").onclick=()=>{dpop(false);if(paidOnly("Notepad"))showNote(true)};
+$("mBook").onclick=()=>{dpop(false);if(paidOnly("Notebook"))showBook(true)};
+$("mPaint").onclick=()=>{dpop(false);if(paidOnly("Paint"))showPaint(true)};
+function showNote(o){$("np").hidden=!o;if(!o)return;drawer(false);let v="";try{v=localStorage.getItem("pic_note")||""}catch(e){}$("npt").value=v;$("nps").textContent=v?"Saved":""}
+$("npx").innerHTML=X;$("npx").onclick=()=>showNote(false);
+$("npt").oninput=()=>{try{localStorage.setItem("pic_note",$("npt").value)}catch(e){}$("nps").textContent="Saved "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+$("npc").onclick=()=>{navigator.clipboard?.writeText($("npt").value).then(()=>toast("Copied"),()=>toast("Copy not allowed here"))};
+$("npd").onclick=async()=>{const dl=await claude.use("downloads");dl?dl.save({filename:"notepad.txt",data:$("npt").value}).catch(()=>{}):toast("Download unavailable")};
+$("npk").onclick=()=>{const b=$("npk");if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="Tap again to clear";setTimeout(()=>{b.dataset.c="";b.textContent="Clear"},3000);return}b.dataset.c="";b.textContent="Clear";$("npt").value="";$("npt").oninput()};
+let nbk=[],nid=null;try{nbk=JSON.parse(localStorage.getItem("pic_nb")||"[]")}catch(e){}
+function nbSave(){try{localStorage.setItem("pic_nb",JSON.stringify(nbk))}catch(e){}}
+function showBook(o){$("book").hidden=!o;if(!o)return;drawer(false);bList()}
+function bList(){nid=null;$("be").hidden=true;$("bnew").hidden=false;$("bT").textContent="Notebook";const l=$("bl");l.innerHTML="";
+ if(!nbk.length){l.innerHTML='<p class="muted">No notes yet. Tap New note.</p>';return}
+ nbk.forEach(n=>{const b=document.createElement("button");b.className="nb";b.textContent=(n.title||"Untitled")+"  ·  "+new Date(n.u).toLocaleDateString();b.onclick=()=>bOpen(n.id);l.appendChild(b)})}
+function bOpen(id){const n=nbk.find(x=>x.id===id);if(!n)return;nid=id;$("bl").innerHTML="";$("be").hidden=false;$("bnew").hidden=true;$("bT").textContent="Note";$("bti").value=n.title;$("bbo").value=n.body}
+function bUpd(){const n=nbk.find(x=>x.id===nid);if(!n)return;n.title=$("bti").value;n.body=$("bbo").value;n.u=Date.now();nbSave()}
+$("bti").oninput=bUpd;$("bbo").oninput=bUpd;
+$("bnew").onclick=()=>{const n={id:Date.now().toString(36),title:"",body:"",u:Date.now()};nbk.unshift(n);nbSave();bOpen(n.id)};
+$("bbk").onclick=bList;
+$("bdl").onclick=()=>{const b=$("bdl");if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="Tap again to delete";setTimeout(()=>{b.dataset.c="";b.textContent="Delete"},3000);return}b.dataset.c="";b.textContent="Delete";nbk=nbk.filter(x=>x.id!==nid);nbSave();bList()};
+$("bx").innerHTML=X;$("bx").onclick=()=>showBook(false);
+const cv=$("cv"),cx=cv.getContext("2d");let pcol="#2b2723",bsz=6,eras=false,drawing=false,snaps=[],lx=0,ly=0,pinit=false;
+function showPaint(o){$("pnt").hidden=!o;if(!o)return;drawer(false);setTimeout(()=>{if(!pinit){const r=cv.getBoundingClientRect();cv.width=Math.round(r.width)||300;cv.height=Math.round(r.height)||300;cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);pinit=true}},50)}
+["#2b2723","#c0392b","#e67e22","#f1c40f","#27ae60","#2980b9","#8e44ad"].forEach(c=>{const b=document.createElement("button");b.style.cssText="width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:"+c;b.setAttribute("aria-label","Color "+c);b.onclick=()=>{pcol=c;eras=false;$("pEr").classList.remove("on")};$("pc2").appendChild(b)});
+function ppos(e){const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
+function pdot(x,y){cx.fillStyle=eras?"#fff":pcol;cx.beginPath();cx.arc(x,y,bsz/2,0,7);cx.fill()}
+cv.addEventListener("pointerdown",e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}snaps.push(cx.getImageData(0,0,cv.width,cv.height));if(snaps.length>20)snaps.shift();drawing=true;[lx,ly]=ppos(e);pdot(lx,ly)});
+cv.addEventListener("pointermove",e=>{if(!drawing)return;const[x,y]=ppos(e);cx.strokeStyle=eras?"#fff":pcol;cx.lineWidth=bsz;cx.lineCap="round";cx.lineJoin="round";cx.beginPath();cx.moveTo(lx,ly);cx.lineTo(x,y);cx.stroke();lx=x;ly=y});
+["pointerup","pointercancel"].forEach(t=>cv.addEventListener(t,()=>{drawing=false}));
+$("psz").oninput=()=>{bsz=+$("psz").value};
+$("pEr").onclick=()=>{eras=!eras;$("pEr").classList.toggle("on",eras)};
+$("pUn").onclick=()=>{const s=snaps.pop();if(s)cx.putImageData(s,0,0)};
+$("pCl").onclick=()=>{snaps.push(cx.getImageData(0,0,cv.width,cv.height));cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height)};
+$("pSv").onclick=()=>{cv.toBlob(async b=>{const dl=await claude.use("downloads");dl?dl.save({filename:"paint.png",data:b}).catch(()=>{}):toast("Download unavailable")},"image/png")};
+$("px").innerHTML=X;$("px").onclick=()=>showPaint(false);
+$("attT").onclick=()=>{$("fi").click();sheet(false)};
+function shrink(src,w,h){const k=Math.min(1,1024/Math.max(w,h));const c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(src,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,"image/jpeg",.85))}
+function frames(f){return new Promise((res,rej)=>{const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=URL.createObjectURL(f);const out=[];
+ v.onerror=()=>rej(new Error("video"));
+ v.onloadedmetadata=async()=>{const d=v.duration;if(!isFinite(d)||!v.videoWidth)return rej(new Error("video"));
+  try{for(const p of [.1,.35,.6,.85]){await new Promise(ok=>{v.onseeked=ok;v.currentTime=d*p});out.push(await shrink(v,v.videoWidth,v.videoHeight))}res(out)}catch(e){rej(e)}}})}
+async function imgBlob(f){try{const b=await createImageBitmap(f);return await shrink(b,b.width,b.height)}catch(e){const u=URL.createObjectURL(f);const i=new Image();await new Promise((ok,no)=>{i.onload=ok;i.onerror=no;i.src=u});return await shrink(i,i.naturalWidth,i.naturalHeight)}}
+function frames2(f){return new Promise((res,rej)=>{const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=URL.createObjectURL(f);const out=[];
+ const kill=setTimeout(()=>rej(new Error("timeout")),30000);
+ v.onerror=()=>{clearTimeout(kill);rej(new Error("video"))};
+ v.onloadeddata=async()=>{try{const d=v.duration;if(!v.videoWidth)throw new Error("video");
+  for(const p of [.1,.35,.6,.85]){await new Promise(ok=>{const t=setTimeout(ok,4000);v.onseeked=()=>{clearTimeout(t);ok()};v.currentTime=isFinite(d)?d*p:0});out.push(await shrink(v,v.videoWidth,v.videoHeight))}
+  clearTimeout(kill);res(out)}catch(e){clearTimeout(kill);rej(e)}};
+ v.load()})}
+async function onFile(inp){const f=inp.files[0];inp.value="";if(!f)return;
+ try{
+  if(f.type.startsWith("image/")){if(f.size>25e6)return toast("Image is too large (max 25 MB).");att={name:f.name||"photo",kind:"image",blobs:[await imgBlob(f)]}}
+  else if(f.type.startsWith("video/")){if(f.size>300e6)return toast("Video is too large (max 300 MB).");toast("Reading video…");const bl=await frames2(f);att={name:f.name||"video",kind:"video",blobs:bl,note:"[These are "+bl.length+" frames taken in order from a video named "+f.name+". Describe or answer about the video using them.]"}}
+  else if(/^text\/|json|xml|javascript/.test(f.type)||/\.(txt|md|csv|json|html|css|js|py|xml|log|ts|java|c|cpp|sql)$/i.test(f.name)){if(f.size>60000)return toast("Text file is too large (max 60 KB).");att={name:f.name,kind:"text",text:(await f.text()).slice(0,60000)}}
+  else return toast("That file type can't be read here. Use a photo, video or text file.");
+  ui();toast("Attached: "+att.name)
+ }catch(e){att=null;ui();toast("Couldn't read that file. Try a smaller photo or a shorter video.")}}
+["fi","fiCam","fiPh"].forEach(i=>{$(i).onchange=()=>onFile($(i))});$("shx").onclick=()=>sheet(false);
+$("sheet").onclick=e=>{if(e.target===$("sheet"))sheet(false)};
+$("imgT").onclick=()=>setMode("image");$("gameT").onclick=()=>setMode("game");$("vidT").onclick=()=>setMode("video");
+$("arT").onclick=()=>{if(!window.speechSynthesis)return toast("Reading aloud isn't supported here.");autoRead=!autoRead;if(!autoRead)speechSynthesis.cancel();ui()};
+$("style").onchange=()=>{const s=P().styles;if(s&&!s.includes($("style").value)){$("style").value="Quick";toast("More answer styles need Medium or higher.");showPlans(true)}else{S.style=$("style").value;saveS()}};
+$("plansBtn").onclick=()=>showPlans(true);$("pc").onclick=()=>showPlans(false);
+$("sBtn").onclick=()=>showSet(true);$("sc").onclick=()=>showSet(false);
+function acctUI(){const pa=$("pa");pa.innerHTML="";if(cuName)return;
+ const add=(l,f)=>{const b=document.createElement("button");b.className="t";b.textContent=l;b.onclick=f;pa.appendChild(b)};
+ if(prof&&sess){$("pt").textContent="Signed in as "+prof.name;$("pd").textContent=prof.email;$("acc").textContent=prof.name[0].toUpperCase();
+  add("Log out",()=>{sess=false;try{localStorage.removeItem("adi_sess")}catch(e){}acctUI();toast("Logged out")})}
+ else{$("pt").textContent="Guest";$("pd").textContent="Sign up or log in to save your profile.";$("acc").innerHTML=svg('<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-4 4-5.5 7-5.5s6.2 1.5 7 5.5"/>');
+  add("Sign up",()=>showAuth("up"));add("Log in",()=>showAuth("in"))}
+ const a=document.createElement("a");a.className="t";a.textContent="Claude login";a.href="https://claude.ai/login";a.target="_blank";a.rel="noopener";a.style.textDecoration="none";pa.appendChild(a)}
+let amode="up";
+function showAuth(m){amode=m;$("auth").hidden=false;$("panel").hidden=true;$("aT").textContent=m==="up"?"Sign up":"Log in";$("aD").textContent=m==="up"?"Create your profile.":"Welcome back.";$("aN").hidden=m!=="up";$("aGo").textContent=m==="up"?"Create profile":"Log in";$("aSw").textContent=m==="up"?"Have a profile? Log in":"New here? Sign up";$("aErr").textContent=""}
+$("aSw").onclick=()=>showAuth(amode==="up"?"in":"up");
+$("ac").innerHTML=X;$("ac").onclick=()=>{$("auth").hidden=true};$("aGu").onclick=()=>{$("auth").hidden=true};
+$("aGo").onclick=()=>{const n=$("aN").value.trim(),e=$("aE").value.trim().toLowerCase();
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){$("aErr").textContent="Enter a valid email.";return}
+ if(amode==="up"){if(!n){$("aErr").textContent="Enter your name.";return}prof={name:n.slice(0,40),email:e}}
+ else if(!prof||prof.email!==e){$("aErr").textContent="No profile with that email on this device. Sign up first.";return}
+ sess=true;try{localStorage.setItem("adi_prof",JSON.stringify(prof));localStorage.setItem("adi_sess","1")}catch(x){}
+ $("auth").hidden=true;acctUI();toast("Welcome, "+prof.name)};
+function ownerUI(){plan="og";try{localStorage.setItem("adi_plan","og")}catch(e){}$("devBtn").hidden=false;badge();ui()}
+function saveDev(){try{localStorage.setItem("adi_dev",JSON.stringify({tier:tierOv,sys}))}catch(e){}}
+function showDev(o){$("dev").hidden=!o;if(!o)return;drawer(false);let u={};try{u=JSON.parse(localStorage.getItem("adi_use")||"{}")}catch(e){}const t=u.d===new Date().toDateString();
+ const s=$("dstats");s.innerHTML="";
+ [["Messages today",t?u.m||0:0],["Images today",t?u.i||0:0],["Saved chats",chats.length],["Plan",P().name],["Cloud sync",cloud?"On":"Off"],["AI available",sample?"Yes":"No"]].forEach(([k,v])=>{const r=document.createElement("div");r.className="sr";const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.style.fontWeight="600";b.textContent=v;r.append(a,b);s.appendChild(r)});
+ $("dTier").value=tierOv;$("dSys").value=sys;$("dlog").textContent=lastErr?"Last error: "+lastErr:"No errors this session."}
+$("devBtn").onclick=()=>showDev(true);$("dc").innerHTML=X;$("dc").onclick=()=>showDev(false);
+$("dTier").onchange=()=>{tierOv=$("dTier").value;saveDev();toast("Model tier saved")};
+$("dSave").onclick=()=>{sys=$("dSys").value.trim().slice(0,1000);saveDev();toast("Instructions saved")};
+$("dReset").onclick=()=>{try{localStorage.removeItem("adi_use")}catch(e){}showDev(true);toast("Usage reset")};
+$("dExport").onclick=async()=>{const dl=await claude.use("downloads");dl?dl.save({filename:"adi-chats.json",data:JSON.stringify(chats,null,2)}).catch(()=>{}):toast("Download unavailable")};
+$("sPlanB").onclick=()=>{showSet(false);showPlans(true)};
+[["sTheme","theme"],["sSize","size"],["sStyle","style"],["sRate","rate"],["sLang","lang"]].forEach(([i,k])=>{$(i).onchange=()=>{
+ if(k==="style"&&P().styles&&!P().styles.includes($(i).value)){$(i).value=S.style;toast("More answer styles need Medium or higher.");return}
+ S[k]=$(i).value;saveS();applyS();if(k==="style")$("style").value=S.style}});
+$("sClear").onclick=()=>{const b=$("sClear");if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="Tap again to confirm";setTimeout(()=>{b.dataset.c="";b.textContent="Clear all chats"},4000);return}b.dataset.c="";b.textContent="Clear all chats";chats=[];cur=null;persist();render();list();toast("Chats cleared")};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR)$("mic").hidden=true;else $("mic").onclick=()=>{
+ if(on){rec.stop();return}
+ window.speechSynthesis&&speechSynthesis.cancel();heard=false;
+ rec=new SR();rec.lang=S.lang||navigator.language||"en-US";rec.interimResults=true;const base=q.value;
+ rec.onresult=e=>{heard=true;let s="";for(const r of e.results)s+=r[0].transcript;q.value=(base?base+" ":"")+s;grow()};
+ rec.onend=()=>{on=false;$("mic").classList.remove("on");if(heard&&q.value.trim()){speakNext=true;send()}};
+ rec.onerror=e=>toast(e.error==="not-allowed"||e.error==="service-not-allowed"?"Microphone is blocked here. Allow mic access, or open the page in your browser.":"Voice input error: "+e.error);
+ on=true;$("mic").classList.add("on");try{rec.start()}catch(e){on=false;$("mic").classList.remove("on")}};
+claude.use("sample").then(s=>{sample=s}).catch(()=>{});
+(async()=>{try{const u=await claude.use("user");if(u){const me=await u.me();if(await u.isOwner()){owner=true;ownerUI()}const n=owner?"Aditya Gupta":(me.name||"");$("pt").textContent=owner?"Aditya Gupta · Owner":n?"Signed in as "+n:"Signed in";if(n)$("acc").textContent=n[0].toUpperCase();$("pd").textContent=owner?"Owner. All plans and the Developer area are unlocked.":"Your chats are saved to your account.";cuName=owner?"Aditya Gupta":(n||"Claude user");acctUI();
+ try{const db=await claude.use("db");if(db){const id=await u.id();cloud=db.doc("data/users/"+id+"/chats");const s=await cloud.get();
+  if(!owner&&s.exists&&PLANS[s.data().plan]){plan=s.data().plan;try{localStorage.setItem("adi_plan",plan)}catch(e){}badge();ui()}
+  if(s.exists&&Array.isArray(s.data().items)){const m=new Map(chats.map(c=>[c.id,c]));s.data().items.forEach(c=>{const x=m.get(c.id);if(!x||c.u>x.u)m.set(c.id,c)});chats=[...m.values()].sort((a,b)=>b.u-a.u).slice(0,20);list()}}}catch(e){}return}}catch(e){}
+ acctUI()})();
+if(!P().styles||P().styles.includes(S.style))$("style").value=S.style;
+applyS();badge();ui();render();list();acctUI();
+</script></body></html>
